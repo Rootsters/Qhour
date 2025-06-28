@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Time to Nearest Quarter Hour</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f8f9fa;
+      max-width: 600px;
+      margin: auto;
+    }
+    h2 {
+      text-align: center;
+      font-size: 24px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-size: 18px;
+    }
+    input[type="time"], button {
+      width: 100%;
+      font-size: 18px;
+      margin-top: 5px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 15px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .result, .history {
+      font-size: 18px;
+      margin-top: 20px;
+    }
+    .history-entry {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Time to Nearest Quarter Hour</h2>
+
+  <label for="inTime">In Time (8:00 AM – 4:00 PM):</label>
+  <input type="time" id="inTime" step="60">
+
+  <label for="outTime">Out Time (8:00 AM – 4:00 PM):</label>
+  <input type="time" id="outTime" step="60">
+
+  <button onclick="calculateHours()">Calculate</button>
+  <button onclick="clearHistory()" style="background-color: #dc3545; margin-top: 10px;">Clear History</button>
+<button onclick="resetAll()" style="background-color: #6c757d; margin-top: 10px; margin-left: 10px;">Reset All</button>
+
+  <div class="result" id="output"></div>
+  <div class="history" id="history"></div>
+
+  <script>
+    let historyLog = [];
+
+    function roundToQuarterHour(decimalHours) {
+      return Math.round(decimalHours * 4) / 4;
+    }
+
+    function formatAMPM(hour, minute) {
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = ((hour + 11) % 12 + 1);
+      return `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`;
+    }
+
+    function calculateHours() {
+      const inTimeStr = document.getElementById("inTime").value;
+      const outTimeStr = document.getElementById("outTime").value;
+
+      if (!inTimeStr || !outTimeStr) {
+        document.getElementById("output").innerText = "Please select both times.";
+        return;
+      }
+
+      const [inHour, inMin] = inTimeStr.split(':').map(Number);
+      const [outHour, outMin] = outTimeStr.split(':').map(Number);
+
+      let inTotal = inHour * 60 + inMin;
+      let outTotal = outHour * 60 + outMin;
+
+      const minLimit = 8 * 60;
+      const maxLimit = 16 * 60;
+
+      if (inTotal < minLimit || outTotal > maxLimit) {
+        document.getElementById("output").innerText = "Time must be between 8:00 AM and 4:00 PM.";
+        return;
+      }
+
+      if (outTotal <= inTotal) {
+        document.getElementById("output").innerText = "Out Time must be after In Time.";
+        return;
+      }
+
+      const totalMinutes = outTotal - inTotal;
+      const decimalHours = totalMinutes / 60;
+      const roundedHours = roundToQuarterHour(decimalHours);
+
+      const result = `In: ${formatAMPM(inHour, inMin)}, Out: ${formatAMPM(outHour, outMin)} → Rounded Hours: ${roundedHours.toFixed(2)} (${totalMinutes} min)`;
+
+      document.getElementById("output").innerText = result;
+      historyLog.push(result);
+      updateHistory();
+    }
+
+    function updateHistory() {
+      const historyDiv = document.getElementById("history");
+      historyDiv.innerHTML = "<h3>History</h3>" + historyLog.map(entry => `<div class='history-entry'>${entry}</div>`).join("");
+    }
+
+    function clearHistory() {
+      historyLog = [];
+      document.getElementById("output").innerText = "";
+      document.getElementById("history").innerHTML = "";
+    }
+  
+    function resetAll() {
+      clearHistory();
+      document.getElementById("inTime").value = "";
+      document.getElementById("outTime").value = "";
+    }
+    </script>
+
+</body>
+</html>
